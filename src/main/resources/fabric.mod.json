@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"id": "ar2en",
+	"version": "${version}",
+	"name": "Ar2En Chat Translator",
+	"description": "Type Arabic in chat, press Right Shift, and AI translates it to natural English gamer slang before sending. Powered by Groq (free) with LibreTranslate fallback.",
+	"authors": [
+		"Ar2En"
+	],
+	"contact": {},
+	"license": "MIT",
+	"icon": "assets/ar2en/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.ar2en.Ar2EnClient"
+		],
+		"modmenu": [
+			"com.ar2en.gui.Ar2EnModMenu"
+		]
+	},
+	"mixins": [
+		{
+			"config": "ar2en.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": ">=26.1 <26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

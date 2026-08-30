@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "com.ar2en.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [],
+	"client": [
+		"ChatScreenAccessor"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
