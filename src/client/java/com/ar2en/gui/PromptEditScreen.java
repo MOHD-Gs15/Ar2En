@@ -58,7 +58,7 @@ public class PromptEditScreen extends Screen {
                                 .bounds(bx + bw + 4, by, bw, 20)
                                 .build());
                 addRenderableWidget(Button.builder(Component.literal("إلغاء"), b ->
-                                                this.minecraft.setScreen(parent))
+                                                this.minecraft.gui.setScreen(parent))
                                 .bounds(bx + 2 * (bw + 4), by, bw, 20).build());
         }
 
@@ -70,12 +70,12 @@ public class PromptEditScreen extends Screen {
                 cfg.syncActiveProfile();
                 ModConfig.save();
                 ChatTranslator.service().clearCache();
-                this.minecraft.setScreen(parent);
+                this.minecraft.gui.setScreen(parent);
         }
 
         @Override
         public void onClose() {
                 // Esc = discard edits, do not save.
-                this.minecraft.setScreen(parent);
+                this.minecraft.gui.setScreen(parent);
         }
 }

@@ -63,7 +63,7 @@ public final class ChatTranslator {
                                         return;
                                 }
 
-                                if (minecraft.screen == chatScreen) {
+                                if (minecraft.gui.screen() == chatScreen) {
                                         if (box.getValue().trim().equals(original)) {
                                                 // The player has not typed anything new: swap in the translation for review.
                                                 box.setValue(result.text());
@@ -108,7 +108,8 @@ public final class ChatTranslator {
         private static void chat(String message) {
                 Minecraft minecraft = Minecraft.getInstance();
                 if (minecraft.gui != null) {
-                        minecraft.gui.getChat().addClientSystemMessage(Component.literal(message));
+                        // Since 26.3 the chat widget lives on the HUD, not on the Gui.
+                        minecraft.gui.hud.getChat().addClientSystemMessage(Component.literal(message));
                 }
         }
 }

@@ -13,7 +13,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.network.chat.Component;
 import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,18 +35,21 @@ public class Ar2EnClient implements ClientModInitializer {
         public void onInitializeClient() {
                 ModConfig cfgLoaded = ModConfig.get();
 
+                // Minecraft 26.3 replaced GLFW with SDL: key codes now come from
+                // InputConstants.KEY_* and the key type is Type.KEYBOARD.
                 translateKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                                 "key.ar2en.translate",
-                                InputConstants.Type.KEYSYM,
-                                GLFW.GLFW_KEY_RIGHT_SHIFT,
+                                InputConstants.KEY_RSHIFT,
                                 KeyMapping.Category.MISC
                 ));
 
                 // The GUI lets the player rebind the hotkey; the binding is persisted in
                 // ar2en.json (options.txt would not persist runtime setKey calls), so
-                // re-apply the saved key on every launch.
-                if (cfgLoaded.hotkeyCode > 0 && cfgLoaded.hotkeyCode != GLFW.GLFW_KEY_RIGHT_SHIFT) {
-                        translateKey.setKey(InputConstants.Type.KEYSYM.getOrCreate(cfgLoaded.hotkeyCode));
+                // re-apply the saved key on every launch. The binding is stored by its
+                // canonical name, so it survives the GLFW -> SDL key code change.
+                InputConstants.Key savedKey = Hotkeys.resolve(cfgLoaded.hotkeyKey);
+                if (savedKey != null) {
+                        translateKey.setKey(savedKey);
                 }
 
                 // Chat screens swallow keyboard input, so regular keybinding polling never
@@ -192,7 +194,8 @@ public class Ar2EnClient implements ClientModInitializer {
         private static void chat(String message) {
                 Minecraft minecraft = Minecraft.getInstance();
                 if (minecraft.gui != null) {
-                        minecraft.gui.getChat().addClientSystemMessage(Component.literal(message));
+                        // Since 26.3 the chat widget lives on the HUD, not on the Gui.
+                        minecraft.gui.hud.getChat().addClientSystemMessage(Component.literal(message));
                 }
         }
 }

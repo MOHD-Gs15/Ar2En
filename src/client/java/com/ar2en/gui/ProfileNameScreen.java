@@ -1,13 +1,13 @@
 package com.ar2en.gui;
 
 import com.ar2en.ModConfig;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * Tiny dialog that asks for the name of a new profile, then snapshots the
@@ -38,7 +38,7 @@ public class ProfileNameScreen extends Screen {
 
                 addRenderableWidget(Button.builder(Component.literal("إنشاء"), b -> create())
                                 .bounds(this.width / 2 - 110, 102, 106, 20).build());
-                addRenderableWidget(Button.builder(Component.literal("إلغاء"), b -> this.minecraft.setScreen(parent))
+                addRenderableWidget(Button.builder(Component.literal("إلغاء"), b -> this.minecraft.gui.setScreen(parent))
                                 .bounds(this.width / 2 + 4, 102, 106, 20).build());
         }
 
@@ -46,12 +46,12 @@ public class ProfileNameScreen extends Screen {
                 ModConfig cfg = ModConfig.get();
                 cfg.addProfile(nameBox.getValue());
                 ModConfig.save();
-                this.minecraft.setScreen(parent);
+                this.minecraft.gui.setScreen(parent);
         }
 
         @Override
         public boolean keyPressed(KeyEvent event) {
-                if (event.key() == GLFW.GLFW_KEY_ENTER || event.key() == GLFW.GLFW_KEY_KP_ENTER) {
+                if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
                         create();
                         return true;
                 }
@@ -60,6 +60,6 @@ public class ProfileNameScreen extends Screen {
 
         @Override
         public void onClose() {
-                this.minecraft.setScreen(parent);
+                this.minecraft.gui.setScreen(parent);
         }
 }

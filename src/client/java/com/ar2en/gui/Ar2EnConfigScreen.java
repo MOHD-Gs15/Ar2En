@@ -2,6 +2,7 @@ package com.ar2en.gui;
 
 import com.ar2en.Ar2EnClient;
 import com.ar2en.ChatTranslator;
+import com.ar2en.Hotkeys;
 import com.ar2en.ModConfig;
 import com.ar2en.providers.GroqProvider;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -15,7 +16,6 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -95,7 +95,7 @@ public class Ar2EnConfigScreen extends Screen {
 
                 // ---- row 3: add/delete profile + fetch models ----
                 addRenderableWidget(Button.builder(Component.literal("+ جديد"), b ->
-                                                this.minecraft.setScreen(new ProfileNameScreen(this)))
+                                                this.minecraft.gui.setScreen(new ProfileNameScreen(this)))
                                 .bounds(xL, y, 77, ROW_H)
                                 .tooltip(Tooltip.create(Component.literal("أنشئ بروفايل جديداً من إعداداتك الحالية")))
                                 .build());
@@ -130,7 +130,7 @@ public class Ar2EnConfigScreen extends Screen {
 
                 String promptLabel = cfg.customPrompt.isBlank() ? "البرومبت: افتراضي" : "البرومبت: مخصص ✓";
                 addRenderableWidget(Button.builder(Component.literal(promptLabel), b ->
-                                                this.minecraft.setScreen(new PromptEditScreen(this)))
+                                                this.minecraft.gui.setScreen(new PromptEditScreen(this)))
                                 .bounds(xR, y, COL, ROW_H)
                                 .tooltip(Tooltip.create(Component.literal(
                                                 "حرّر التعليمات المرسلة للذكاء الاصطناعي — تغيّر أسلوب الترجمة بالكامل")))
@@ -257,14 +257,18 @@ public class Ar2EnConfigScreen extends Screen {
         public boolean keyPressed(KeyEvent event) {
                 if (listeningForKey) {
                         int key = event.key();
-                        if (key == GLFW.GLFW_KEY_ESCAPE) {
+                        if (key == InputConstants.KEY_ESCAPE) {
                                 // cancel, keep old binding
                                 listeningForKey = false;
                                 hotkeyButton.setMessage(keyLabel(ModConfig.get()));
                         } else if (key != 0) {
                                 ModConfig cfg = ModConfig.get();
-                                cfg.hotkeyCode = key;
-                                Ar2EnClient.translateKey().setKey(InputConstants.Type.KEYSYM.getOrCreate(key));
+                                // Store the canonical key name so the binding survives the
+                                // GLFW -> SDL key code change of Minecraft 26.3.
+                                InputConstants.Key newKey = InputConstants.Type.KEYBOARD.getOrCreate(key);
+                                cfg.hotkeyKey = Hotkeys.nameOf(newKey);
+                                cfg.hotkeyCode = Hotkeys.codeOf(newKey);
+                                Ar2EnClient.translateKey().setKey(newKey);
                                 ModConfig.save();
                                 listeningForKey = false;
                                 hotkeyButton.setMessage(keyLabel(cfg));
@@ -277,6 +281,6 @@ public class Ar2EnConfigScreen extends Screen {
         @Override
         public void onClose() {
                 ModConfig.save();
-                this.minecraft.setScreen(parent);
+                this.minecraft.gui.setScreen(parent);
         }
 }

@@ -2,8 +2,8 @@ package com.ar2en;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.loader.api.FabricLoader;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -69,8 +69,20 @@ public class ModConfig {
         /** Model ids known to the GUI (refreshed live from Groq via the fetch button). */
         public List<String> knownModels = new ArrayList<>(List.of("openai/gpt-oss-120b", "openai/gpt-oss-20b"));
 
-        /** GLFW key code of the translate hotkey (kept here so the GUI can rebind and it survives restarts). */
-        public int hotkeyCode = GLFW.GLFW_KEY_RIGHT_SHIFT;
+        /**
+         * Canonical name of the translate hotkey, e.g. "key.keyboard.right.shift".
+         * Names are stable across Minecraft versions, unlike the raw key codes, which
+         * changed completely in 26.3 (GLFW -> SDL). Null until {@link #normalize} resolves it.
+         */
+        public String hotkeyKey = null;
+
+        /**
+         * Numeric key code of the translate hotkey.
+         * On Minecraft 26.1.x this was a GLFW code (the default was
+         * {@link Hotkeys#LEGACY_DEFAULT_CODE}); since 26.3 it is an SDL code.
+         * Kept in the file so older configs can be migrated on the first 26.3 launch.
+         */
+        public int hotkeyCode = InputConstants.KEY_RSHIFT;
 
         /** LibreTranslate endpoint (POST). Point it at your own docker instance for unlimited free use. */
         public String libreUrl = "https://libretranslate.com/translate";
@@ -114,6 +126,7 @@ public class ModConfig {
                 if (cfg.profiles == null) cfg.profiles = new ArrayList<>();
                 if (cfg.knownModels == null) cfg.knownModels = new ArrayList<>(List.of("openai/gpt-oss-120b", "openai/gpt-oss-20b"));
                 if (cfg.customPrompt == null) cfg.customPrompt = "";
+                normalizeHotkey(cfg);
                 if (cfg.profiles.isEmpty()) {
                         // Migration / first run: wrap the current live settings as the default profile.
                         cfg.profiles.add(new Profile("القازرز", cfg.groqModel, cfg.providers, cfg.customPrompt));
@@ -126,6 +139,28 @@ public class ModConfig {
                 if (!cfg.knownModels.contains(cfg.groqModel)) {
                         cfg.knownModels.add(0, cfg.groqModel);
                 }
+        }
+
+        /**
+         * Resolves the translate hotkey.
+         *
+         * <p>Minecraft 26.3 replaced GLFW with SDL and every key code changed value
+         * (Right Shift went from 344 to 229). Configs written by Ar2En &lt;= 1.1.0 only
+         * contain the old GLFW code, so it is translated to the canonical key name
+         * ("key.keyboard.right.shift"), which is identical on both versions.
+         */
+        private static void normalizeHotkey(ModConfig cfg) {
+                if (cfg.hotkeyKey == null || cfg.hotkeyKey.isBlank()) {
+                        String migrated = Hotkeys.nameForLegacyCode(cfg.hotkeyCode);
+                        cfg.hotkeyKey = (migrated != null) ? migrated : Hotkeys.DEFAULT_NAME;
+                }
+                InputConstants.Key resolved = Hotkeys.resolve(cfg.hotkeyKey);
+                if (resolved == null) {
+                        // Unusable name -> fall back to the default binding.
+                        cfg.hotkeyKey = Hotkeys.DEFAULT_NAME;
+                        resolved = Hotkeys.defaultKey();
+                }
+                cfg.hotkeyCode = Hotkeys.codeOf(resolved);
         }
 
         // ---------------- profile helpers ----------------
